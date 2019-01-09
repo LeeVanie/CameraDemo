@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:camera="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/all">
+
+    <com.idcardlibs.camerademo.SquareCameraPreview
+        android:id="@+id/surfaceview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+    
+    <com.idcardlibs.camerademo.FocusImageView
+        android:id="@+id/focusImageView"
+        android:layout_width="75dip"
+        android:layout_height="75dip"
+        camera:focus_focusing_id="@mipmap/focus_focusing"
+        camera:focus_success_id="@mipmap/focus_focused"
+        camera:focus_fail_id="@mipmap/focus_focus_failed" />
+    
+    <CheckBox
+        android:id="@+id/btn_flash"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_margin="10dp"
+        android:background="@mipmap/btn_auto_flash_on"
+        android:button="@null" />
+    
+    <CheckBox
+        android:id="@+id/btn_autoFocus"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_margin="10dp"
+        android:layout_below="@+id/btn_flash"
+        android:background="@mipmap/btn_auto_focus_on"
+        android:button="@null"/>
+    
+    <CheckBox
+        android:id="@+id/light_switch"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_below="@+id/btn_autoFocus"
+        android:background="@mipmap/cameralight"
+        android:button="@null"
+        android:layout_margin="10dp" />
+    
+    <Button
+        android:id="@+id/btn_take"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:background="@mipmap/photo_came" />
+
+</RelativeLayout>
