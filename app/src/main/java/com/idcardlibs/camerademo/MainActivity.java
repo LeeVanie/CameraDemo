@@ -38,11 +38,12 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private CheckBox autoFocusTogBtn; // 是否 自动对焦
     private FocusImageView mFocusImageView;
     private CheckBox light_switch;
+    private CheckBox switch_camera;
     private SeekBar seekBar;
     private int maxZoom;    //seekbar最大缩放值
     private SurfaceHolder surfaceHolder;
     private Camera camera;
-    private int cameraPosition = 0;
+    private int cameraPosition = 0; // 0：后置， 1：前置
     private int PICTURE_SIZE_MAX_WIDTH;  //照片最大宽度
     private int PICTURE_SIZE_MAX_HIGHT;  //照片最大宽度
     private boolean isPreviewing = true; // 是否 正在预览
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         surfaceView = (SquareCameraPreview) findViewById(R.id.surfaceview);
         lightTogBtn = (CheckBox) findViewById(R.id.btn_flash);
         autoFocusTogBtn = (CheckBox) findViewById(R.id.btn_autoFocus);
+        switch_camera = (CheckBox) findViewById(R.id.switch_camera);
         btnTake = (Button) findViewById(R.id.btn_take);
         mFocusImageView = (FocusImageView) findViewById(R.id.focusImageView);
         light_switch = (CheckBox) findViewById(R.id.light_switch);
@@ -93,6 +95,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 
+            }
+        });
+
+        switch_camera.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                switchFrontCamera(isChecked);
             }
         });
         
@@ -276,7 +285,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private void setPreview(boolean is) {
         if (is) {
             if (!isPreviewing) {
-                // goubaihu 添加setupCamera() 12.9
                 setupCamera();
                 camera.startPreview();
                 isPreviewing = true;
@@ -291,6 +299,49 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         }
     }
 
+    /**
+     * 切换摄像头
+     */
+    public void switchFrontCamera(boolean b) {
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+
+        for (int i = 0; i < cameraCount; i++) {
+            Camera.getCameraInfo(i, cameraInfo);//得到每一个摄像头的信息
+            if (b) {
+                //现在是后置，变更为前置
+                if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                    //重新打开
+                    reStartCamera(i);
+                    cameraPosition = 0;
+                    break;
+                }
+            } else {
+                //现在是前置， 变更为后置
+                if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                    reStartCamera(i);
+                    cameraPosition = 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    //重新打开预览
+    public void reStartCamera(int i) {
+        if (camera != null) {
+            camera.stopPreview();//停掉原来摄像头的预览
+            camera.release();//释放资源
+            camera = null;//取消原来摄像头
+        }
+        try {
+            camera = Camera.open(i);//打开当前选中的摄像头
+            camera.setPreviewDisplay(surfaceHolder);//通过surfaceview显示取景画面
+            camera.startPreview();//开始预览
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
     /**
      * 设置相机参数
      */
