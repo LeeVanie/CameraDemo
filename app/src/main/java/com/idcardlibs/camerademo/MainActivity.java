@@ -271,10 +271,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
         setPreview(false);
-        if (camera != null) {
-            camera.release();
-            camera = null;
-        }
+        stopPreview();
     }
 
     /**
@@ -311,15 +308,21 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 //现在是后置，变更为前置
                 if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                     //重新打开
+                    light_switch.setVisibility(View.GONE);
+                    lightTogBtn.setVisibility(View.GONE);
+                    autoFocusTogBtn.setVisibility(View.GONE);
                     reStartCamera(i);
-                    cameraPosition = 0;
+                    cameraPosition = 1;
                     break;
                 }
             } else {
                 //现在是前置， 变更为后置
                 if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                    light_switch.setVisibility(View.VISIBLE);
+                    lightTogBtn.setVisibility(View.VISIBLE);
+                    autoFocusTogBtn.setVisibility(View.VISIBLE);
                     reStartCamera(i);
-                    cameraPosition = 1;
+                    cameraPosition = 0;
                     break;
                 }
             }
@@ -329,27 +332,27 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     //重新打开预览
     public void reStartCamera(int i) {
         if (camera != null) {
-            camera.stopPreview();//停掉原来摄像头的预览
-            camera.release();//释放资源
-            camera = null;//取消原来摄像头
+            camera.setPreviewCallback(null);
+            camera.stopPreview();
+            camera.lock();
+            camera.release();
+            camera = null;
         }
         try {
             camera = Camera.open(i);//打开当前选中的摄像头
-            camera.setPreviewDisplay(surfaceHolder);//通过surfaceview显示取景画面
-            camera.startPreview();//开始预览
-        } catch (IOException e) {
+            surfaceView.setCamera(camera);
+            setPreview(false);
+            camera.setPreviewDisplay(surfaceHolder);
+            setPreview(true);
+        } catch (Exception e) {
             e.printStackTrace();
-        }
+        } 
     }
     
     /**
      * 设置相机参数
      */
     private void setupCamera() {
-        // 如果是前摄像头，不设置参数
-        if (cameraPosition == 1) {
-            return;
-        }
         // Never keep a global parameters
         Camera.Parameters parameters = camera.getParameters();
         parameters.setPictureFormat(PixelFormat.JPEG);
@@ -373,8 +376,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         } catch (Exception e) {
             Toast.makeText(this, "平衡模式设置异常", Toast.LENGTH_SHORT).show();
         }
-        // 由于界面是竖屏显示  所以需要旋转预览图像  这里设置的后置摄像头
-        setCameraDisplayOrientation(this, Camera.CameraInfo.CAMERA_FACING_BACK, camera);
+        setCameraDisplayOrientation(this, cameraPosition, camera);
         // 先找最合适的照片尺寸
         // 根据屏幕长宽比
         if (Build.VERSION.SDK_INT >= 24) {//7.0版本
@@ -509,7 +511,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         }
         return isoValues;
     }
-    
+
     @Override
     public void onPause() {
         mOrientationListener.disable();
@@ -519,12 +521,17 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     @Override
     public void onDestroy() {
+        stopPreview();
+        System.gc();
+        super.onDestroy();
+    }
+    
+    private void stopPreview(){
         if (camera != null) {
+            camera.stopPreview();
             camera.release();
             camera = null;
         }
-        System.gc();
-        super.onDestroy();
     }
 
     @Override
@@ -538,6 +545,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         lightTogBtn.setVisibility(View.GONE);
         autoFocusTogBtn.setVisibility(View.GONE);
         btnTake.setVisibility(View.GONE);
+        switch_camera.setVisibility(View.GONE);
     }
 
     public Bitmap decodeSampledBitmapFromByte(byte[] bitmapBytes) {

@@ -99,14 +99,6 @@ public class SquareCameraPreview extends SurfaceView {
         setMeasuredDimension(width, height);
     }
 
-    public int getViewWidth() {
-        return getWidth();
-    }
-
-    public int getViewHeight() {
-        return getHeight();
-    }
-
     public void setCamera(Camera camera) {
         mCamera = camera;
 
@@ -137,7 +129,7 @@ public class SquareCameraPreview extends SurfaceView {
             case MotionEvent.ACTION_UP: {
                 Point point=new Point((int)event.getX(),(int)event.getY());
                 if (mIsFocus) {
-                    if (mIsOtherBtn) {
+                    if (mIsOtherBtn && mCamera != null) {
                         handleFocus(mCamera.getParameters(), point);
                     }
 
@@ -203,7 +195,6 @@ public class SquareCameraPreview extends SurfaceView {
             e.printStackTrace();
         }
     }
-    //2018.9.20 点击区域聚焦，计算区域位置
     //这里设置的横屏，拿到屏幕的宽高和点击位置，计算矩形位置坐标，
     //相机参数设置MeteringAreas时，屏幕坐标和原始坐标不同，分四象限
     private Rect calculateTapArea(float x, float y, float coefficient, Camera.Size previewSize) {
