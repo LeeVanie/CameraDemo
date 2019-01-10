@@ -46,6 +46,15 @@
         android:button="@null"
         android:layout_margin="10dp" />
     
+    <SeekBar
+        android:id="@+id/seekbar"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="100dp"
+        android:max="4"/>
+    
     <Button
         android:id="@+id/btn_take"
         android:layout_width="50dp"

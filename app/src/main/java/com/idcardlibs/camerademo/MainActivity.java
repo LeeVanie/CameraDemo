@@ -24,6 +24,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -37,16 +38,18 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private CheckBox autoFocusTogBtn; // 是否 自动对焦
     private FocusImageView mFocusImageView;
     private CheckBox light_switch;
+    private SeekBar seekBar;
+    private int maxZoom;    //seekbar最大缩放值
     private SurfaceHolder surfaceHolder;
     private Camera camera;
     private int cameraPosition = 0;
     private int PICTURE_SIZE_MAX_WIDTH;  //照片最大宽度
     private int PICTURE_SIZE_MAX_HIGHT;  //照片最大宽度
     private boolean isPreviewing = true; // 是否 正在预览
-    private int cameraCount;
+    private int cameraCount; //摄像头个数
     private CameraOrientationListener mOrientationListener;
     private int rotationCamera;
-    private int displayDegree;; //屏幕的选择角度
+    private int displayDegree; //屏幕的选择角度
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,11 +71,31 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         btnTake = (Button) findViewById(R.id.btn_take);
         mFocusImageView = (FocusImageView) findViewById(R.id.focusImageView);
         light_switch = (CheckBox) findViewById(R.id.light_switch);
+        seekBar = ((SeekBar) findViewById(R.id.seekbar));
 
         mOrientationListener = new CameraOrientationListener(this);
         mOrientationListener.enable();
         init();
 
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Camera.Parameters parameters = camera.getParameters();
+                parameters.setZoom((int) (((progress * (1.0f / (maxZoom * 100))) * maxZoom)));
+                camera.setParameters(parameters);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+               
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                
+            }
+        });
+        
         lightTogBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -356,6 +379,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         if (light_switch.isChecked()) {
             parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
         }
+        //初始化seekBar
+        maxZoom = parameters.getMaxZoom();
+        seekBar.setProgress(0);
+        seekBar.setMax(maxZoom*100);
         camera.setParameters(parameters);
     }
 
@@ -453,13 +480,16 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     public void onPictureTaken(byte[] data, Camera camera) {
         setFlashModeLight(false);
         rotationCamera = mOrientationListener.getRememberedNormalOrientation();
-        Bitmap bitmap = decodeSampledBitmapFromByte(this, data);
+        Bitmap bitmap = decodeSampledBitmapFromByte(data);
         rotateImage(displayDegree, bitmap);
-        
+        light_switch.setVisibility(View.GONE);
+        seekBar.setVisibility(View.GONE);
+        lightTogBtn.setVisibility(View.GONE);
+        autoFocusTogBtn.setVisibility(View.GONE);
+        btnTake.setVisibility(View.GONE);
     }
 
-    public Bitmap decodeSampledBitmapFromByte(Context context,
-                                                     byte[] bitmapBytes) {
+    public Bitmap decodeSampledBitmapFromByte(byte[] bitmapBytes) {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         options.inMutable = true;
